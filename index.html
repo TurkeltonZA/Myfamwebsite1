@@ -13,15 +13,23 @@
         .login { text-align: center; margin-top: 50px; }
         .profile { display: flex; flex-direction: column; align-items: center; }
         .profile input, .profile textarea { margin: 10px 0; }
+        .homepage-button { margin-top: 20px; }
     </style>
 </head>
 <body>
     <div class="login">
         <h1>Welcome to My Family</h1>
         <form id="loginForm">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <button type="submit">Login</button>
+        </form>
+        <form id="viewFamilyForm" style="margin-top: 20px;">
             <label for="familyCode">Family Code:</label>
             <input type="text" id="familyCode" name="familyCode" required>
-            <button type="submit">Login</button>
+            <button type="submit">View Family</button>
         </form>
     </div>
 
@@ -34,6 +42,7 @@
             <button onclick="addMember()">Add Member</button>
             <button onclick="removeMember()">Remove Member</button>
         </div>
+        <button class="homepage-button" onclick="showLoginPage()">Homepage</button>
     </div>
 
     <div id="profilePage" style="display: none;">
@@ -44,49 +53,81 @@
             <input type="file" id="photoUpload" accept="image/*">
             <input type="file" id="audioUpload" accept="audio/*">
             <button onclick="logEvent()">Log Event</button>
+            <button class="homepage-button" onclick="showFamilyPage()">Homepage</button>
+        </div>
+        <div class="profile">
+            <h2>Edit My Details</h2>
+            <label for="birthDate">Birth Date:</label>
+            <input type="date" id="birthDate">
+            <button onclick="updateDetails()">Update</button>
         </div>
     </div>
 
     <script>
         const familyMembers = [
-            { name: 'Allegria', age: 9, events: [] },
-            { name: 'Elisha', age: 7, events: [] },
-            { name: 'Isabelle', age: 6, events: [] },
-            { name: 'Rapha-Ella', age: 3, events: [] },
-            { name: 'Felix', age: 10, events: [] }
+            { name: 'Allegria', birthDate: '2014-05-01', events: [], icon: '👧' },
+            { name: 'Elisha', birthDate: '2016-08-01', events: [], icon: '👦' },
+            { name: 'Isabelle', birthDate: '2017-09-01', events: [], icon: '👧' },
+            { name: 'Rapha-Ella', birthDate: '2020-04-01', events: [], icon: '👶' },
+            { name: 'Felix', birthDate: '2023-09-01', events: [], icon: '👶' }
         ];
+
+        const ownerCredentials = {
+            username: 'yourUsername',
+            password: 'yourPassword'
+        };
+
+        function calculateAge(birthDate) {
+            const birth = new Date(birthDate);
+            const now = new Date();
+            const ageInMonths = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+            return ageInMonths < 12 ? `${ageInMonths} months` : `${Math.floor(ageInMonths / 12)} years`;
+        }
 
         document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (username === ownerCredentials.username && password === ownerCredentials.password) {
+                document.querySelector('.login').style.display = 'none';
+                document.getElementById('familyPage').style.display = 'block';
+                loadFamilyTree(true);
+            } else {
+                alert('Invalid credentials');
+            }
+        });
+
+        document.getElementById('viewFamilyForm').addEventListener('submit', function(event) {
+            event.preventDefault();
             const familyCode = document.getElementById('familyCode').value;
-            // Simulate a successful login
             if (familyCode === 'yourFamilyCode') {
                 document.querySelector('.login').style.display = 'none';
                 document.getElementById('familyPage').style.display = 'block';
-                loadFamilyTree();
+                loadFamilyTree(false);
             } else {
                 alert('Invalid family code');
             }
         });
 
-        function loadFamilyTree() {
+        function loadFamilyTree(isOwner) {
             const familyTree = document.getElementById('familyTree');
             familyTree.innerHTML = '';
-            familyMembers.sort((a, b) => b.age - a.age).forEach(member => {
+            familyMembers.sort((a, b) => new Date(b.birthDate) - new Date(a.birthDate)).forEach(member => {
                 const memberDiv = document.createElement('div');
                 memberDiv.className = 'member';
-                memberDiv.innerHTML = `<img src="default-avatar.png" alt="${member.name}"><p>${member.name}, ${member.age} years old</p>`;
-                memberDiv.addEventListener('click', () => openProfile(member));
+                memberDiv.innerHTML = `<img src="default-avatar.png" alt="${member.name}"><p>${member.icon} ${member.name}, ${calculateAge(member.birthDate)}</p>`;
+                memberDiv.addEventListener('click', () => openProfile(member, isOwner));
                 familyTree.appendChild(memberDiv);
             });
         }
 
         function addMember() {
             const name = prompt('Enter the name of the new member:');
-            const age = prompt('Enter the age of the new member:');
-            if (name && age) {
-                familyMembers.push({ name, age: parseInt(age), events: [] });
-                loadFamilyTree();
+            const birthDate = prompt('Enter the birth date of the new member (YYYY-MM-DD):');
+            const icon = prompt('Enter an icon for the new member (e.g., 👧, 👦, 👶):');
+            if (name && birthDate && icon) {
+                familyMembers.push({ name, birthDate, events: [], icon });
+                loadFamilyTree(true);
             }
         }
 
@@ -95,16 +136,19 @@
             const index = familyMembers.findIndex(member => member.name === name);
             if (index !== -1) {
                 familyMembers.splice(index, 1);
-                loadFamilyTree();
+                loadFamilyTree(true);
             } else {
                 alert('Member not found');
             }
         }
 
-        function openProfile(member) {
+        function openProfile(member, isOwner) {
             document.getElementById('familyPage').style.display = 'none';
             document.getElementById('profilePage').style.display = 'block';
             document.getElementById('profileName').innerText = member.name;
+            if (!isOwner) {
+                document.querySelectorAll('.profile')[1].style.display = 'none';
+            }
         }
 
         function logEvent() {
@@ -113,6 +157,27 @@
             const audioUpload = document.getElementById('audioUpload').files[0];
             // Implement event logging logic here
             alert('Event logged: ' + eventText);
+        }
+
+        function updateDetails() {
+            const name = document.getElementById('profileName').innerText;
+            const birthDate = document.getElementById('birthDate').value;
+            const member = familyMembers.find(member => member.name === name);
+            if (member && birthDate) {
+                member.birthDate = birthDate;
+                alert('Details updated');
+                loadFamilyTree(true);
+            }
+        }
+
+        function showLoginPage() {
+            document.getElementById('familyPage').style.display = 'none';
+            document.querySelector('.login').style.display = 'block';
+        }
+
+        function showFamilyPage() {
+            document.getElementById('profilePage').style.display = 'none';
+            document.getElementById('familyPage').style.display = 'block';
         }
     </script>
 </body>
