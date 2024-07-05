@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Family</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .family-tree { display: flex; flex-direction: column; align-items: center; }
+        .member { margin: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .member img { width: 50px; height: 50px; border-radius: 50%; }
+        .add-remove { margin-top: 20px; }
+        .login { text-align: center; margin-top: 50px; }
+        .profile { display: flex; flex-direction: column; align-items: center; }
+        .profile input, .profile textarea { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="login">
+        <h1>Welcome to My Family</h1>
+        <form id="loginForm">
+            <label for="familyCode">Family Code:</label>
+            <input type="text" id="familyCode" name="familyCode" required>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <div id="familyPage" style="display: none;">
+        <h1>My Family</h1>
+        <div class="family-tree" id="familyTree">
+            <!-- Family members will be dynamically added here -->
+        </div>
+        <div class="add-remove">
+            <button onclick="addMember()">Add Member</button>
+            <button onclick="removeMember()">Remove Member</button>
+        </div>
+    </div>
+
+    <div id="profilePage" style="display: none;">
+        <h1 id="profileName"></h1>
+        <div class="profile">
+            <h2>What's happening today?</h2>
+            <textarea id="eventText" placeholder="Describe the event..."></textarea>
+            <input type="file" id="photoUpload" accept="image/*">
+            <input type="file" id="audioUpload" accept="audio/*">
+            <button onclick="logEvent()">Log Event</button>
+        </div>
+    </div>
+
+    <script>
+        const familyMembers = [
+            { name: 'Allegria', age: 9, events: [] },
+            { name: 'Elisha', age: 7, events: [] },
+            { name: 'Isabelle', age: 6, events: [] },
+            { name: 'Rapha-Ella', age: 3, events: [] },
+            { name: 'Felix', age: 10, events: [] }
+        ];
+
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const familyCode = document.getElementById('familyCode').value;
+            // Simulate a successful login
+            if (familyCode === 'yourFamilyCode') {
+                document.querySelector('.login').style.display = 'none';
+                document.getElementById('familyPage').style.display = 'block';
+                loadFamilyTree();
+            } else {
+                alert('Invalid family code');
+            }
+        });
+
+        function loadFamilyTree() {
+            const familyTree = document.getElementById('familyTree');
+            familyTree.innerHTML = '';
+            familyMembers.sort((a, b) => b.age - a.age).forEach(member => {
+                const memberDiv = document.createElement('div');
+                memberDiv.className = 'member';
+                memberDiv.innerHTML = `<img src="default-avatar.png" alt="${member.name}"><p>${member.name}, ${member.age} years old</p>`;
+                memberDiv.addEventListener('click', () => openProfile(member));
+                familyTree.appendChild(memberDiv);
+            });
+        }
+
+        function addMember() {
+            const name = prompt('Enter the name of the new member:');
+            const age = prompt('Enter the age of the new member:');
+            if (name && age) {
+                familyMembers.push({ name, age: parseInt(age), events: [] });
+                loadFamilyTree();
+            }
+        }
+
+        function removeMember() {
+            const name = prompt('Enter the name of the member to remove:');
+            const index = familyMembers.findIndex(member => member.name === name);
+            if (index !== -1) {
+                familyMembers.splice(index, 1);
+                loadFamilyTree();
+            } else {
+                alert('Member not found');
+            }
+        }
+
+        function openProfile(member) {
+            document.getElementById('familyPage').style.display = 'none';
+            document.getElementById('profilePage').style.display = 'block';
+            document.getElementById('profileName').innerText = member.name;
+        }
+
+        function logEvent() {
+            const eventText = document.getElementById('eventText').value;
+            const photoUpload = document.getElementById('photoUpload').files[0];
+            const audioUpload = document.getElementById('audioUpload').files[0];
+            // Implement event logging logic here
+            alert('Event logged: ' + eventText);
+        }
+    </script>
+</body>
+</html>
